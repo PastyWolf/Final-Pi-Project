@@ -5,6 +5,7 @@
 ###########################################################################################
 
 ###########################################################################################
+#yoyoyoyoyoyoyoyoyoyoyoyoyoyoyoyoyoyoyoyoyoyoyoyoyoyoyoyoyoyoyoyoyoyoyoyoyoyoyoyooyoyoyoyoyo
 from Tkinter import *
 # the blueprint for a room
 class Room(object):
