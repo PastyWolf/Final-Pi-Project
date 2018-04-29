@@ -1,5 +1,5 @@
 ###########################################################################################
-# Name: Prasil Mainali
+# Name: Prasil Mainali, Matthew Tures, Anna Wolf
 # Date: 4-4-18
 # Description: A room adventure puzzel game that one has to carefully maneuver now with GUI
 ###########################################################################################
