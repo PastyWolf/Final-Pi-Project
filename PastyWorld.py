@@ -225,6 +225,7 @@ class Game(Frame):
 
         #sets up the GUI
         def setupGUI(self):
+                #I added this line for the attack button show that it can tell you how much damage you did betwee 0-20
                 def __init__(self, master):
                         Frame.__init__(self, master)
                         self.button1 = Button(master, text = "Attack", fg = "red", command = self.attack)
