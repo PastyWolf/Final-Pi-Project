@@ -6,6 +6,7 @@
 
 ###########################################################################################
 from Tkinter import *
+from random import randint
 # the blueprint for a room
 class Room(object):
         # the constructor
@@ -224,6 +225,13 @@ class Game(Frame):
 
         #sets up the GUI
         def setupGUI(self):
+                def __init__(self, master):
+                        Frame.__init__(self, master)
+                        self.button1 = Button(master, text = "Attack", fg = "red", command = self.attack)
+                        self.button1.pack(side = MIDDLE)
+                        
+                def attack(self):
+                        Game.text.insert(END, "You did {} damage.".format(randint(0, 21)))
                 #organize the GUI
                 self.pack(fill = BOTH, expand = 1)
                 #setup the player input at the bottom of the GUI
