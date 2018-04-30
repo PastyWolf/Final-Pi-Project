@@ -351,9 +351,7 @@ WIDTH = 800
 HEIGHT = 600
 # create the window
 window = Tk()
-window.title("Room Adventure")
-text = Label(window, text="Pick your Gender!")
-text.pack()
+window.title("Real Pasty World")
 # create the GUI as a Tkinter canvas inside the window
 g = Game(window)
 # play the game
