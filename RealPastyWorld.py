@@ -109,14 +109,59 @@ class Room(object):
 #inherits from the Frame class of Tkinter
 class Game(Frame):
         #the constructor
+        #the constructor
         def __init__(self, master):
                 #calss the constructor in superclass
                 Frame.__init__(self, master)
                 self.button1 = Button(master, text = "Attack", fg = "red", command = self.attack)
                 self.button1.pack(side = LEFT)
 
+        #sets up the GUI
+        def setupGUI(self):
+                #organize the GUI
+                self.pack(fill = BOTH, expand = 1)
+                #setup the player input at the bottom of the GUI
+                # the widget is a Tkinter Entry
+                # set its background to white and bind the return key to the
+                # function process in the class
+                # push it to the bottom of the GUI and let it fill
+                # horizontally
+                # give it focus so the player doesn't have to click on it
+                Game.player_input = Entry(self, bg="white")
+                Game.player_input.bind("<Return>", self.process)
+                Game.player_input.pack(side=BOTTOM, fill=X)
+                Game.player_input.focus()
+                # setup the image to the left of the GUI
+                # the widget is a Tkinter Label
+                # don't let the image control the widget's size
+                img = None
+                Game.image = Label(self, width=WIDTH / 2, image=img)
+                Game.image.image = img
+                Game.image.pack(side=LEFT, fill=Y)
+                Game.image.pack_propagate(False)
+                # setup the text to the right of the GUI
+                # first, the frame in which the text will be placed
+                text_frame = Frame(self, width=WIDTH / 2)
+                # the widget is a Tkinter Text
+                # disable it by default
+                # don't let the widget control the frame's size
+                Game.text = Text(text_frame, bg="black",fg = "red", state=DISABLED)
+                Game.text.pack(fill=Y, expand=1)
+                text_frame.pack(side=RIGHT, fill=Y)
+                text_frame.pack_propagate(False)
+
         def attack(self):
-                Game.text.insert(END, "You did {} damage to the enemy.".format(randint(0,21)))
+                Game.text.config(state = NORMAL)
+                Game.text.delete("1.0", END)
+                x = randint(0, 20)
+                if(x <= 5):
+                        Game.text.insert(END, "You did {} damage to the enemy. What a piful luck.".format(x))
+
+                elif(x > 5 and x < 15):
+                        Game.text.insert(END, "You did {} damage to the enemy. Hmm, medium damage.".format(x))
+
+                elif(x > 15):
+                        Game.text.insert(END, "You did {} damage to the enemy. Very Well, Now that's satisfying.".format(x))
      
         
         #creates the rooms
@@ -193,41 +238,6 @@ class Game(Frame):
 
                 #initialize the player's inventory
                 Game.inventory = []
-
-        #sets up the GUI
-        def setupGUI(self):
-                #organize the GUI
-                self.pack(fill = BOTH, expand = 1)
-                #setup the player input at the bottom of the GUI
-                # the widget is a Tkinter Entry
-                # set its background to white and bind the return key to the
-                # function process in the class
-                # push it to the bottom of the GUI and let it fill
-                # horizontally
-                # give it focus so the player doesn't have to click on it
-                Game.player_input = Entry(self, bg="white")
-                Game.player_input.bind("<Return>", self.process)
-                Game.player_input.pack(side=BOTTOM, fill=X)
-                Game.player_input.focus()
-                # setup the image to the left of the GUI
-                # the widget is a Tkinter Label
-                # don't let the image control the widget's size
-                img = None
-                Game.image = Label(self, width=WIDTH / 2, image=img)
-                Game.image.image = img
-                Game.image.pack(side=LEFT, fill=Y)
-                Game.image.pack_propagate(False)
-                # setup the text to the right of the GUI
-                # first, the frame in which the text will be placed
-                text_frame = Frame(self, width=WIDTH / 2)
-                # the widget is a Tkinter Text
-                # disable it by default
-                # don't let the widget control the frame's size
-                Game.text = Text(text_frame, bg="black",fg = "red", state=DISABLED)
-                Game.text.pack(fill=Y, expand=1)
-                text_frame.pack(side=RIGHT, fill=Y)
-                text_frame.pack_propagate(False)
-                
 
         #set the current room image
         def setRoomImage(self):
