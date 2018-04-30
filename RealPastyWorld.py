@@ -3,7 +3,7 @@
 # Date: 4-4-2018
 # Description: A house adventure filled with a great sense of adventure. Navigate through this place to achieve victory.
 ###########################################################################################
-
+#MATT!!!!! DO NOT FORGET TO ASK BRENCEN ABOUT HIS ROOM ADVENTURE KEY TRICK.
 ###########################################################################################
 from Tkinter import *
 from random import randint
