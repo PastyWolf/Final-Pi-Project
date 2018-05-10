@@ -105,6 +105,8 @@ class Room(object):
 
                 return s
 
+global boss_hp
+boss_hp = 90
 #the game class
 #inherits from the Frame class of Tkinter
 class Game(Frame):
@@ -153,15 +155,28 @@ class Game(Frame):
         def attack(self):
                 Game.text.config(state = NORMAL)
                 Game.text.delete("1.0", END)
+                global x
                 x = randint(0, 20)
-                if(x <= 5):
-                        Game.text.insert(END, "You did {} damage to the enemy. What a piful luck.".format(x))
+                global boss_hp
+                boss_hp -= x
+                if (boss_hp > 0):
+                        Game.text.insert(END, "The boss's HP went down to {}.\n".format(boss_hp))
 
-                elif(x > 5 and x < 15):
-                        Game.text.insert(END, "You did {} damage to the enemy. Hmm, medium damage.".format(x))
+                else:
+                        Game.text.insert(END, "The boss's HP went dowen to 0.\n")
+                        
+                if(x <= 5 and boss_hp >= 0):
+                        Game.text.insert(END, "You did {} damage to the enemy. What a piful luck.\n".format(x))
 
-                elif(x > 15):
-                        Game.text.insert(END, "You did {} damage to the enemy. Very Well, Now that's satisfying.".format(x))
+                elif(x > 5 and x < 15 and boss_hp >= 0):
+                        Game.text.insert(END, "You did {} damage to the enemy. Hmm, medium damage.\n".format(x))
+                        
+
+                elif(x >= 15 and boss_hp >= 0):
+                        Game.text.insert(END, "You did {} damage to the enemy. Very Well, Now that's satisfying.\n".format(x))
+
+                elif (boss_hp <= 0):
+                        Game.text.insert(END, "The boss is now dead.")
      
         
         #creates the rooms
@@ -254,6 +269,8 @@ class Game(Frame):
 
         #sets the status displayed on the right
         def setStatus(self, status):
+                global boss_hp
+                global x
                 #enable the text widget, clear it, set it, and disable it
                 Game.text.config(state = NORMAL)
                 Game.text.delete("1.0", END)
@@ -262,6 +279,16 @@ class Game(Frame):
                 else:
                         #otherwise, display the appropriate status
                         Game.text.insert(END, str(Game.currentRoom) + "\nYou are carrying: " + str(Game.inventory) + "\n\n" + status)
+                        if(boss_hp == 90):
+                                Game.text.insert(END, "There is a boss in this room and its health is 90.\n")
+
+                        elif (boss_hp <= 0):
+                                Game.text.insert(END, "The boss now has 0 HP.\n")
+                                Game.text.insert(END, "You may proceed to the next room")
+                                
+
+                        else:
+                                Game.text.insert(END, "There is a boss in this room and its health is {}\n".format(boss_hp))
 
                 Game.text.config(state = DISABLED)
 
