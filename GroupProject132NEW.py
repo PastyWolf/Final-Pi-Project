@@ -1,7 +1,7 @@
 ###########################################################################################
 # Name: Matthew Tures
-# Date: 
-# Description: Group project 
+# Date:
+# Description: Group project
 ###########################################################################################
 from random import randint
 from Tkinter import*
@@ -32,7 +32,7 @@ class Room(object):
       @name.setter
       def name(self, value):
             self._name = value
-            
+
       @property
       def image(self):
                 return self._image
@@ -103,7 +103,7 @@ class Room(object):
             # append the item and description to the appropriate lists
             # dictionary
             self._items[item] = desc
-                
+
 
       # adds a grabbable item to the room
       # the item is a string (e.g., key)
@@ -136,6 +136,12 @@ class Room(object):
             return s
 ###########################################################################################
 
+global boss_hp
+boss_hp = 90
+global user_hp
+user_hp = 20
+
+
 #the game class
 #inherits from the Frame class of Tkinter
 class Game(Frame):
@@ -146,8 +152,77 @@ class Game(Frame):
                 self.button1 = Button(parent, text = "ATTACK!", fg = "black", bg="green", command = self.attack)
                 self.button1.pack(side = BOTTOM, fill=X)
 
-                
-        # creates the rooms
+
+        # sets up the GUI
+        def setupGUI(self):
+                # organize the GUI
+                self.pack(fill=BOTH, expand=1)
+                # setup the player input at the bottom of the GUI
+
+                # create widget
+                Game.player_input = Entry(self, bg="lightgrey")
+                Game.player_input.bind("<Return>", self.process)
+                Game.player_input.pack(side=TOP, fill=X)
+                Game.player_input.focus()
+
+                # setup the image to the left of the GUI
+                # the widget is a Tkinter Label
+                # don't let the image control the widget's size
+                img = None
+                Game.image = Label(self, width=WIDTH / 2, image=img)
+                Game.image.image = img
+                Game.image.pack(side=LEFT, fill=Y)
+                Game.image.pack_propagate(False)
+
+                # setup the text to the right of the GUI
+                # first, the frame in which the text will be placed
+                text_frame = Frame(self, width=WIDTH / 2)
+                # the widget is a Tkinter Text
+                # disable it by default
+                # don't let the widget control the frame's size
+                Game.text = Text(text_frame, bg="lightgrey", state=DISABLED)
+                Game.text.pack(fill=Y, expand=1)
+                text_frame.pack(side=RIGHT, fill=Y)
+                text_frame.pack_propagate(False)
+
+
+
+        def attack(self):
+                Game.text.config(state = NORMAL)
+                Game.text.delete("1.0", END)
+                global x
+                x = randint(0, 20)
+                global boss_hp
+                boss_hp -= x
+                global y
+                y = randint(0, 20)
+                global user_hp
+                user_hp -= y
+
+                if (Game.currentRoom == r2):
+                    Game.text.insert(END, "There is a boss in this room. It has 90 HP.")
+                    if (user_hp > 0):
+                        if (boss_hp > 0):
+                            Game.text.insert(END, "The boss's HP went down to {}.\n".format(boss_hp))
+                            Game.text.insert(END, "Your HP went down to {}.\n".format(user_hp))
+                            if (x <= 5):
+                                Game.text.insert(END, "You did {} damage to the enemy. What a piful luck.".format(x))
+                            elif (x > 5 and x < 15):
+                                Game.text.insert(END, "You did {} damage to the enemy. Hmm, medium damage.".format(x))
+                            elif (x >= 15):
+                                Game.text.insert(END, "You did {} damage to the enemy. Very Well, Now that's satisfying.".format(x))
+                        else:
+                            Game.text.insert(END, "You did {} damage.The boss's HP went down to 0.\n".format(x))
+                            Game.text.insert(END, "The boss did {} damage. Your HP went down to {}.\n".format(y, user_hp))
+                        Game.text.insert(END, "The boss did {} damage to you.\n".format(y))
+                    elif (user_hp <= 0):
+                        # this doesn't actually make the room change to death screen
+                        Game.currentRoom == None
+                else:
+                    Game.text.insert(END, "Woah. Slow down stud, there's nothing to fight here.")
+
+
+      # creates the rooms
         def createRooms(self):
                 # r0 through r4 are the four settings in the game
                 # currentRoom is the setting the player is currently in (which can be one of r0 through r4)
@@ -155,13 +230,13 @@ class Game(Frame):
                 global currentRoom
                 global menu
                 global r0
-                
+
                 global r1
                 global r2
                 global r3
                 global r4
 
-                      
+
                 # create the rooms and give them meaningful names and an image in the ccurrent directory
                 r0 = Room("Menu")
                 r1 = Room("Forest")
@@ -174,9 +249,9 @@ class Game(Frame):
                 r0.addChar("girl")
                 r0.addChar("boy")
                 r0.addChar("potato")
-                
+
                 # add exits to room 1
-                r1.addExit("next", r2)   
+                r1.addExit("next", r2)
 
                 # add grabbables to room 1
                 r1.addGrabbable("key")
@@ -207,7 +282,7 @@ class Game(Frame):
                 r4.addItem("brew_rig", "Gourd is brewing some sort of oatmeal stout on the brew rig.  A 6-pack is resting beside it.")
 
 
-                  
+
                 # set room 1 as the current room at the beginning of the game
                 Game.currentRoom = r0
 
@@ -215,67 +290,9 @@ class Game(Frame):
                 Game.inventory= []
                 Game.youare = []
 
-                
-                
 
 
-        # sets up the GUI
-        def setupGUI(self):
-                # organize the GUI
-                self.pack(fill=BOTH, expand=1)
-                # setup the player input at the bottom of the GUI
 
-                # the widget is a Tkinter Entry
-                # set its background to white and bind the return key to the
-                # function process in the class
-                # push it to the bottom of the GUI and let it fill
-                # horizontally
-                # give it focus so the player doesn't have to click on it
-                Game.player_input = Entry(self, bg="lightgrey")
-                Game.player_input.bind("<Return>", self.process)
-                Game.player_input.pack(side=TOP, fill=X)
-                Game.player_input.focus()
-                
-                # setup the image to the left of the GUI
-                # the widget is a Tkinter Label
-                # don't let the image control the widget's size
-                img = None
-                Game.image = Label(self, width=WIDTH / 2, image=img)
-                Game.image.image = img
-                Game.image.pack(side=LEFT, fill=Y)
-                Game.image.pack_propagate(False)
-                
-                # setup the text to the right of the GUI
-                # first, the frame in which the text will be placed
-                text_frame = Frame(self, width=WIDTH / 2)
-                # the widget is a Tkinter Text
-                # disable it by default
-                # don't let the widget control the frame's size
-                Game.text = Text(text_frame, bg="lightgrey", state=DISABLED)
-                Game.text.pack(fill=Y, expand=1)
-                text_frame.pack(side=RIGHT, fill=Y)
-                text_frame.pack_propagate(False)
-                
-                
-
-        def attack(self):
-                Game.text.config(state = NORMAL)
-                Game.text.delete("1.0", END)
-                x = randint(0, 20)
-                if (Game.currentRoom == r2):
-                      if(x <= 5):
-                              Game.text.insert(END, "You did {} damage to the enemy. What a piful luck.".format(x))
-
-                      elif(x > 5 and x < 15):
-                              Game.text.insert(END, "You did {} damage to the enemy. Hmm, medium damage.".format(x))
-
-                      elif(x > 15):
-                              Game.text.insert(END, "You did {} damage to the enemy. Very Well, Now that's satisfying.".format(x))
-                else:
-                      Game.text.insert(END, "Woah. Slow down stud, there's nothing to fight here.")
-                      
-                
-                
         # set the current room image
         def setRoomImage(self):
                 if (Game.currentRoom == None):
@@ -321,9 +338,9 @@ class Game(Frame):
                       if (Game.currentRoom == r4 and Game.youare[0] == "potato"):
                             Game.img = PhotoImage(file="room4withpotat.gif")
 
-                        
+
                 # display the image on the left of the GUI
-                
+
                 Game.image.config(image=Game.img)
                 Game.image.image = Game.img
 
@@ -333,27 +350,29 @@ class Game(Frame):
               if (Game.currentRoom == None):
                     mixer.music.load('death.ogg')
                     mixer.music.play()
-                    
+
               elif (Game.currentRoom == r1):
                     mixer.music.load('forest.ogg')
                     mixer.music.play(-1)
-                    
+
               elif (Game.currentRoom == r2):
                     mixer.music.load('cave.ogg')
                     mixer.music.play(-1)
-                    
+
               elif (Game.currentRoom == r3):
                     mixer.music.load('ruins.ogg')
                     mixer.music.play(-1)
-                    
+
               elif (Game.currentRoom == r4):
                     mixer.music.load('moon.ogg')
                     mixer.music.play(-1)
 
-                
-                
+
+
         # sets the status displayed on the right of the GUI
         def setStatus(self, status):
+                global boss_hp
+                global x
                 # enable the text widget, clear it, set it, and disabled it
                 Game.text.config(state=NORMAL)
                 Game.text.delete("1.0", END)
@@ -363,10 +382,19 @@ class Game(Frame):
                 else:
                         # otherwise, display the appropriate status
                         Game.text.insert(END, str(Game.currentRoom) + "\nYou are carrying: " + str(Game.inventory) + "\n\n" + status)
+                        if (boss_hp == 90 and Game.currentRoom == r2):
+                              Game.text.insert(END, "There is a boss in this room and its health is 90.\n")
+
+                        elif (boss_hp <= 0 and Game.currentRoom == r2):
+                              Game.text.insert(END, "The boss now has 0 HP.\n")
+                              Game.text.insert(END, "You may proceed to the next room.\n")
+
+                        else:
+                              Game.text.insert(END, "Look around. There might be clues.")
 
                 Game.text.config(state=DISABLED)
-                
-                
+
+
         # play the game
         def play(self):
                 # add the rooms to the game
@@ -378,12 +406,12 @@ class Game(Frame):
                 # set the current status
                 self.setStatus("")
 
-                      
+
                 #puts music on, the '-1' mean a loop.
                 mixer.init()
                 mixer.music.load('menu.ogg')
                 mixer.music.play(-1)
-        
+
         # processes the player's input
         def process(self, event):
 
@@ -399,13 +427,13 @@ class Game(Frame):
                 # exit the game if the player wants to leave (supports quit, exit, and bye)
                 if (action == "quit" or action == "exit" or action == "bye" or action == "sionara!"):
                         exit(0)
-                        
+
                 # if the player is dead if goes/went south from room 4
                 if (Game.currentRoom == None):
                         # clear the player's input
                         Game.player_input.delete(0, END)
                         return
-                
+
                 # split the user input into words (words are separated by spaces) and store the words in a list
                 words = action.split()
 
@@ -475,7 +503,7 @@ class Game(Frame):
                                                 Game.currentRoom.delChar("boy")
                                                 Game.currentRoom.delChar("girl")
                                                 response = "You are a potato."
-                                        
+
                         # the verb is: take
                         elif (verb == "take"):
                               # set a default response
@@ -498,13 +526,13 @@ class Game(Frame):
                 # display the room's image on the left of the GUI
                 # clear the player's input
                 self.setStatus(response)
-                self.setRoomImage()           
+                self.setRoomImage()
                 Game.player_input.delete(0, END)
                 self.setRoomSound()
 
 
 
-                
+
 
 
 
