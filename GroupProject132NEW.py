@@ -215,9 +215,15 @@ class Game(Frame):
                             Game.text.insert(END, "You did {} damage.The boss's HP went down to 0.\n".format(x))
                             Game.text.insert(END, "The boss did {} damage. Your HP went down to {}.\n".format(y, user_hp))
                         Game.text.insert(END, "The boss did {} damage to you.\n".format(y))
-                    elif (user_hp <= 0):
-                        # this doesn't actually make the room change to death screen
-                        Game.currentRoom == None
+                    if (user_hp <= 0):
+                        # this DOES actually make the room change to death screen
+                        Game.text.config(state = NORMAL)
+                        Game.text.delete("1.0", END)
+                        Game.currentRoom = None
+                        self.setRoomImage()
+                        Game.text.insert(END, " YOU DED!")
+                        mixer.music.load('death.ogg')
+                        mixer.music.play()
                 else:
                     Game.text.insert(END, "Woah. Slow down stud, there's nothing to fight here.")
 
