@@ -1,0 +1,740 @@
+###########################################################################################
+# Name: Matthew Tures, Anna Wolf, Prasil Mainali
+# Date: 05/17/18 :)
+# Description: Group project
+###########################################################################################
+# import files and libraries
+from random import randint
+import random
+import RPi.GPIO as GPIO
+from array import array
+from time import sleep, time
+import pygame 
+from Tkinter import*
+from pygame import*
+import time
+mixer.init()
+###########################################################################################
+# the blueprint for a room
+class Room(object):
+      # the constructor
+      def __init__(self, name):
+            # rooms have a name, an image(the name of a file), exits (e.g., south), exit locations (e.g., to the south is room n),
+            # items (e.g., table), item descriptions (for each item), and grabbables (things that can
+            # be taken into inventory)
+            self.name = name
+            self.image = image
+            self.exits = {}
+            self.items = {}
+            self.characters = {}
+            self.Characters = []
+            self.grabbables = []
+
+      # getters and setters for the instance variables
+      @property
+      def name(self):
+            return self._name
+
+      @name.setter
+      def name(self, value):
+            self._name = value
+
+      @property
+      def image(self):
+                return self._image
+      @image.setter
+      def image(self, value):
+              self._image = value
+
+      @property
+      def exits(self):
+            return self._exits
+
+      @exits.setter
+      def exits(self, value):
+            self._exits = value
+
+      @property
+      def characters(self):
+            return self._characters
+
+      @characters.setter
+      def characters(self, value):
+            self._characters = value
+
+      @property
+      def Characters(self):
+            return self._Characters
+
+      @Characters.setter
+      def Characters(self, value):
+            self._Characters = value
+
+
+      @property
+      def items(self):
+            return self._items
+
+      @items.setter
+      def items(self, value):
+            self._items = value
+
+      @property
+      def grabbables(self):
+            return self._grabbables
+
+      @grabbables.setter
+      def grabbables(self, value):
+            self._grabbables = value
+
+      # adds an exit to the room
+      # the exit is a string (e.g., north)
+      # the room is an instance of a room
+      def addExit(self, exit, room):
+            # append the exit and room to the appropriate lists
+            #dictionary
+            self._exits[exit] = room
+
+      # adds two additions to the select function 
+      def addChar(self, character):
+            self._Characters.append(character)
+
+      def delChar(self, character):
+            self._Characters.remove(character)
+
+
+      # adds an item to the room
+      # the item is a string (e.g., table)
+      # the desc is a string that describes the item (e.g., it is made of wood)
+      def addItem(self, item, desc):
+            # append the item and description to the appropriate lists
+            # dictionary
+            self._items[item] = desc
+
+
+      # adds a grabbable item to the room
+      # the item is a string (e.g., key)
+      def addGrabbable(self, item):
+            # append the item to the list
+            self._grabbables.append(item)
+
+      # removes a grabbable item from the room
+      # the item is a string (e.g., key)
+      def delGrabbable(self, item):
+            # remove the item from the list
+            self._grabbables.remove(item)
+
+      # returns a string description of the room
+      def __str__(self):
+            # first, the room name
+            s = "You are in {}.\n".format(self.name)
+
+            # next, the items in the room
+            s += "You see: "
+            for item in self.items:
+                  s += item + " "
+            s += "\n"
+
+            # next, the exits from the room
+            s += "Exits: "
+            for exit in self.exits:
+                  s += exit + " "
+
+            return s
+      
+###########################################################################################
+
+# Returns health points from both parties and makes them open for other functions
+global boss_hp
+boss_hp = 90
+global user_hp
+user_hp = 200
+
+
+#the game class
+#inherits from the Frame class of Tkinter
+class Game(Frame):
+        # the constructor
+        def __init__(self, parent):
+                # call the constructor in the superclass
+                Frame.__init__(self, parent)
+                # Set up the GUI's bottom-line characteristics
+                self.button1 = Button(parent, text = "ATTACK!", fg = "black", bg="green", command = self.attack)
+                self.button1.pack(side = BOTTOM, fill=X)
+
+
+        # sets up the GUI
+        def setupGUI(self):
+                # organize the GUI
+                self.pack(fill=BOTH, expand=1)
+                # setup the player input at the bottom of the GUI
+
+                # create widget
+                Game.player_input = Entry(self, bg="lightgrey")
+                Game.player_input.bind("<Return>", self.process)
+                Game.player_input.pack(side=TOP, fill=X)
+                Game.player_input.focus()
+
+                # Set up and fix image of rooms to the left side of the screen
+                img = None
+                Game.image = Label(self, width=WIDTH / 2, image=img)
+                Game.image.image = img
+                Game.image.pack(side=LEFT, fill=Y)
+                Game.image.pack_propagate(False)
+
+                # Set up and fix text to the right side of screen
+                text_frame = Frame(self, width=WIDTH / 2)
+                # Disable the user text options within the text part of the game
+                Game.text = Text(text_frame, bg="lightgrey", state=DISABLED)
+                Game.text.pack(fill=Y, expand=1)
+                text_frame.pack(side=RIGHT, fill=Y)
+                text_frame.pack_propagate(False)
+
+
+        # Attack function
+        def attack(self):
+                Game.text.config(state = NORMAL)
+                Game.text.delete("1.0", END)
+                # x is the user's damage to the boss, make it global so we can use inside statements
+                global x
+                # Roll a 20 sided die to determine damage
+                x = randint(0, 20)
+                global boss_hp
+                # Decrease boss hp by the user damage
+                if (user_hp > 0):
+                    boss_hp -= x
+                else:
+                    boss_hp = boss_hp
+                # y is the boss's damage to the user
+                global y
+                # Roll a 20 sided die to determine damage
+                y = randint(0, 20)
+                global user_hp
+                # Decreases user hp by boss damage
+                if (boss_hp > 0):
+                    user_hp -= y
+                else:
+                    user_hp = user_hp
+
+                # initializes room 1 and room 4 as the boss rooms
+                # The way this is set up, the mini game only works for the first room. The final boss, you don't get to play the minigame b/c it's supposed to be hard
+                if (Game.currentRoom == r1 or Game.currentRoom == r4):
+                    # Given that the user's health is above zero...
+                    if (user_hp > 0):
+                        # and that the boss's health is above zero...
+                        if (boss_hp > 0):
+                            # Send out standard lines of text describing how the battle is turning out
+                            Game.text.insert(END, "The boss's HP went down to {}.\n".format(boss_hp))
+                            Game.text.insert(END, "Your HP went down to {}.\n".format(user_hp))
+                            # Depending on where the 20 sided die lies...
+                            if (x <= 5 and y <= 5):
+                                # Print the amount of damage done by both user and boss to the screen
+                                Game.text.insert(END, "You did {} damage to the enemy. What a piful luck.".format(x))
+                                Game.text.insert(END, "You took {} damage.".format(y))
+                            elif (x > 5 and x < 15 and y > 5 and y < 15):
+                                Game.text.insert(END, "You did {} damage to the enemy. Hmm, medium damage.".format(x))
+                                Game.text.insert(END, "You took {} damage.".format(y))
+                            elif (x >= 15 and y >= 15):
+                                Game.text.insert(END, "You did {} damage to the enemy. Very Well, Now that's satisfying.".format(x))
+                                Game.text.insert(END, "You took {} damage.".format(y))
+                            # If the boss's attack is higher than 15, mini game sets up
+                            elif (y >= 15):
+                                  DEBUG = True
+                                  pygame.init()
+                                  # Leds and switches are stated, and sound is defined
+                                  leds = [12, 16, 18, 20]
+                                  switches = [22, 23, 24, 25]
+                                  sounds = [ pygame.mixer.Sound("one.wav"),\
+                                             pygame.mixer.Sound("two.wav"),\
+                                             pygame.mixer.Sound("three.wav"),\
+                                             pygame.mixer.Sound("four.wav"),]
+                                  
+                                  GPIO.setmode(GPIO.BCM)
+                                  GPIO.setup(switches, GPIO.IN, GPIO.PUD_DOWN)
+                                  GPIO.setup(leds, GPIO.OUT)
+
+                                  # this function turns the LEDs on
+                                  def all_on():
+                                        for i in leds:
+                                            GPIO.output(leds, True)
+                                  # This function turns the LEDS off
+                                  def all_off():
+                                        for i in leds:
+                                            GPIO.output(leds, False)
+
+                                  # This function flashes the LEDS a few times when the player loses the game
+                                  def lose():
+                                        # prints the users score
+                                        if (len(seq) == 3):
+                                              print "You didn't even make it a sequence!"
+                                        else:
+                                              print ("You made it to a sequence of {}!").format(len(seq) - 3)
+                                        for i in range(0, 4):
+                                              all_on()
+                                              sleep(0.5)
+                                              all_off()
+                                              sleep(0.5)
+                                              
+                                  # Definition of mini-game
+                                  def gamee():
+                                        # Make the sequence of lights and sounds a list
+                                        seq = []
+                                        global seq
+                                        # add three random lights and sounds to the list
+                                        seq.append(randint(0,3))
+                                        seq.append(randint(0,3))
+                                        seq.append(randint(0,3))
+                                        # Attempt this code before running the except
+                                        try:
+                                              # If you haven't lost the game...
+                                              while(True):
+                                                    # Blink the lights to reset them
+                                                    all_on()
+                                                    sleep(0.5)
+                                                    all_off()
+                                                    sleep(0.5)
+                                                    # mix up the seqence list to make it fresh variance
+                                                    random.shuffle(seq)
+                                                    if (DEBUG):
+                                                          # Print out the sequence for behind the screen use only
+                                                          if (len(seq) > 2):
+                                                                print
+                                                          print
+                                                          print "seq={}".format(seq)
+                                                    # for every index in the list sequence...      
+                                                    for s in seq:
+                                                          # ...blink the lights
+                                                          all_on()
+                                                          sleep(0.5)
+                                                          all_off()
+                                                          sleep(0.5)
+                                                          # Keep one light on, rely the rest on sound
+                                                          GPIO.output(leds[s], True)
+                                                          # play the corresponding sounds
+                                                          sounds[s].play()
+##                                                          # When you complete it three times, you win and break into the main code
+##                                                          if(len(seq)  < 3):
+##                                                                sleep(0.4)
+##                                                                GPIO.output(leds[s], False)
+##                                                                sleep(0.3)
+##                                                                break
+                                                    # Start up a counter for how many times the game has been completed
+                                                    switch_count = 0
+                                                    # Continue to play the game while the counter is below 3
+                                                    while(switch_count < len(seq)):
+                                                          pressed = False
+                                                          while (not pressed):
+                                                                for i in range(len(switches)):
+                                                                      while (GPIO.input(switches[i]) == True):
+                                                                            val = i
+                                                                            pressed = True
+                                                          if (DEBUG):
+                                                                print val,
+                                                          GPIO.output(leds[val], True)
+                                                          sounds[val].play()
+                                                          sleep(1)
+                                                          GPIO.output(leds[val], False)
+                                                          sleep(0.25)
+                                                          # If you get the sequences wrong, you die
+                                                          if(val != seq[switch_count]):
+                                                                lose()
+                                                                GPIO.cleanup()
+                                                                exit(0)
+                                                          if(val > 3):
+                                                                quit
+                                                          switch_count += 1
+                                                    break
+                                        except KeyboardInterrupt:
+                                              pass
+                                  # Break from the game loop once the count is more than 3            
+                                  switch_count = 0
+                                  while(True):
+                                        switch_count+=1
+                                        gamee()
+                                        if (switch_count>=3):
+                                              break
+
+                                  # Cut the user's HP damage in half if the minigame is completed successfully
+                                  if (switch_count >=3):
+                                        Game.text.insert(END, "You did {} damage to the enemy. Very Well, Now that's satisfying.".format(x))
+                                        Game.text.insert(END, "You took {} damage.".format(y/2))
+                                        user_hp = (user_hp + y) - (y/2)
+                                  # Otherwise, we'd like for the game to have continued on with regular damage
+                                  else:
+                                        Game.text.insert(END, "You did {} damage to the enemy. Very Well, Now that's satisfying.".format(x))
+                                        Game.text.insert(END, "You took {} damage.".format(y))
+                                        
+                                          
+                                    
+
+
+                                  
+                        elif (boss_hp <= 0):
+                            # reset the boss's HP once dead in case user wants to fight again
+                            boss_hp = 90
+                            Game.text.config(state = NORMAL)
+                            Game.text.delete("1.0", END)
+                            # Identifies the death of the boss as well as your current HP for the next boss
+                            Game.text.insert(END, "The boss is now dead. There's nothing to attack.")
+                            Game.text.insert(END, "Your HP is {}.".format(user_hp))
+
+                        # Identifies your death if the boss kills you
+                        elif (user_hp <= 0 and boss_hp > 0):
+                               Game.text.config(state = NORMAL)
+                               Game.text.delete("1.0", END)
+                               Game.text.insert(END, "You are now dead.")
+                               Game.text.insert(END, "Your HP is {}.".format(user_hp))
+            
+                        # For regular situations, we have the attack button initialized and default text
+                        else:
+                            self.button1 = Button(text = "ATTACK!", fg = "black", bg="green", state = DISABLED, command = self.attack)
+                            self.button1.pack(side = BOTTOM, fill=X)
+                            Game.text.insert(END, "You did {} damage.The boss's HP went down to 0.\n".format(x))
+                            Game.text.insert(END, "The boss did {} damage. Your HP went down to {}.\n".format(y, user_hp))
+                        Game.text.insert(END, "The boss did {} damage to you.\n".format(y))
+
+                    # Go to death screen, play death music
+                    elif (user_hp <= 0):
+                        # this DOES actually make the room change to death screen
+                        Game.text.config(state = NORMAL)
+                        Game.text.delete("1.0", END)
+                        Game.currentRoom = None
+                        self.setRoomImage()
+                        Game.text.insert(END, " YOU DED!")
+                        mixer.music.load('death.ogg')
+                        mixer.music.play()
+                        
+                # Catches the character if there's no boss in the room and doesn't let them fight
+                else:
+                      Game.text.insert(END, "Woah. Slow down stud, there's nothing to fight here.")
+
+
+      # creates the rooms
+        def createRooms(self):
+                # r0 through r4 are the four settings in the game
+                # currentRoom is the setting the player is currently in (which can be one of r0 through r4)
+                # since it needs to be changed in the main part of the program, it must be global
+                global currentRoom
+                global menu
+                global r0
+
+                global r1
+                global r2
+                global r3
+                global r4
+
+
+                # create the rooms and give them meaningful names and an image in the ccurrent directory
+                r0 = Room("Menu")
+                r1 = Room("Forest")
+                r2 = Room("Cave")
+                r3 = Room("Ruins")
+                r4 = Room("Cellar")
+
+                # First room is zero, add exits and three characters
+                r0.addExit("next", r1)
+                r0.addChar("girl")
+                r0.addChar("boy")
+                r0.addChar("potato")
+                
+                # add exits to room 1
+                r1.addExit("next", r2)
+                # add items to room 1
+                r1.addItem("Charred-Body", "You accidentally step on it and hear a loud SCREEECH.")
+                r1.addItem("Scale", "Shimmers in the shining light.")
+
+
+                # add exits to room 2
+                r2.addExit("next", r3)
+                # add items to room 2
+                r2.addItem("Bone", "It's covered in bite marks and slobber.")
+                r2.addItem("Scratch-Marks", "They run along the entire length of the wall.")
+
+                # add exits to room 3
+                r3.addExit("next", r4)
+                # add grabbables to room 3
+                r3.addGrabbable("Knife")
+                # add items to room 3
+                r3.addItem("Squeaky-Toy", "You accidentally step on it and hear a loud SCREEECH.")
+                r3.addItem("Food-Bowl", "Licked clean.")
+
+                # add exits to room 4
+                # The only ending is death because we all die in the end
+                r4.addExit("next", None)
+                # add grabbables to room 4
+                r4.addGrabbable("cat")
+                # add items to room 4
+                r4.addItem("KEY TO SUCCESS", "Sike! Pay attention to the battle!")
+
+
+
+                # set room 1 as the current room at the beginning of the game
+                Game.currentRoom = r0
+
+                #intitialize the player's inventory
+                Game.inventory= []
+                # Initialize the character's list of characters
+                Game.youare = []
+
+
+
+
+        # set the current room image
+        def setRoomImage(self):
+                if (Game.currentRoom == None):
+
+                      # if dead, set the wasted image
+                      Game.img = PhotoImage(file="skull.gif")
+
+                # Set menu picture for first image
+                elif (Game.currentRoom == r0):
+                      Game.img = PhotoImage(file="menu.gif")
+
+                # Set room 1 picture depending on user selected character
+                elif (Game.currentRoom == r1):
+                      Game.img = PhotoImage(file="room1.gif")
+                      if (Game.currentRoom == r1 and Game.youare[0] == "girl"):
+                            Game.img = PhotoImage(file="room1withgirl.gif")
+                      if (Game.currentRoom == r1 and Game.youare[0] == "boy"):
+                            Game.img = PhotoImage(file="room1withman.gif")
+                      if (Game.currentRoom == r1 and Game.youare[0] == "potato"):
+                            Game.img = PhotoImage(file="room1withpotat.gif")
+
+                # Set room 2 picture depending on user selected character
+                elif (Game.currentRoom == r2):
+                      Game.img = PhotoImage(file="room2.gif")
+                      if (Game.currentRoom == r2 and Game.youare[0] == "girl"):
+                            Game.img = PhotoImage(file="room2withgirl.gif")
+                      if (Game.currentRoom == r2 and Game.youare[0] == "boy"):
+                            Game.img = PhotoImage(file="room2withman.gif")
+                      if (Game.currentRoom == r2 and Game.youare[0] == "potato"):
+                            Game.img = PhotoImage(file="room2withpotat.gif")
+
+                # Set room 3 picture depending on user selected character
+                elif (Game.currentRoom == r3):
+                      Game.img = PhotoImage(file="room3.gif")
+                      if (Game.currentRoom == r3 and Game.youare[0] == "girl"):
+                            Game.img = PhotoImage(file="room3withgirl.gif")
+                      if (Game.currentRoom == r3 and Game.youare[0] == "boy"):
+                            Game.img = PhotoImage(file="room3withman.gif")
+                      if (Game.currentRoom == r3 and Game.youare[0] == "potato"):
+                            Game.img = PhotoImage(file="room3withpotat.gif")
+
+                # Set room 4 picture depending on user selected character
+                elif (Game.currentRoom == r4):
+                      Game.img = PhotoImage(file="room4.gif")
+                      if (Game.currentRoom == r4 and Game.youare[0] == "girl"):
+                            Game.img = PhotoImage(file="room4withgirl.gif")
+                      if (Game.currentRoom == r4 and Game.youare[0] == "boy"):
+                            Game.img = PhotoImage(file="room4withman.gif")
+                      if (Game.currentRoom == r4 and Game.youare[0] == "potato"):
+                            Game.img = PhotoImage(file="room4withpotat.gif")
+
+
+                # display the image on the left of the GUI
+                Game.image.config(image=Game.img)
+                Game.image.image = Game.img
+
+        # set the current room sound
+        def setRoomSound(self):
+              #if dead, play the death sound
+              if (Game.currentRoom == None):
+                    mixer.music.load('death.ogg')
+                    mixer.music.play(-1)
+
+              elif (Game.currentRoom == r1):
+                    mixer.music.load('forest.ogg')
+                    mixer.music.play(-1)
+
+              elif (Game.currentRoom == r2):
+                    mixer.music.load('cave.ogg')
+                    mixer.music.play(-1)
+
+              elif (Game.currentRoom == r3):
+                    mixer.music.load('ruins.ogg')
+                    mixer.music.play(-1)
+
+              elif (Game.currentRoom == r4):
+                    mixer.music.load('moon.ogg')
+                    mixer.music.play(-1)
+
+
+
+        # sets the status displayed on the right of the GUI
+        def setStatus(self, status):
+                global boss_hp
+                global x
+                # enable the text widget, clear it, set it, and disabled it
+                Game.text.config(state=NORMAL)
+                Game.text.delete("1.0", END)
+                if (Game.currentRoom == None):
+                        # if dead, let the player know
+                        Game.text.insert(END, "You are dead. The only thing you can do now is quit.\n")
+                else:
+                        # otherwise, display the appropriate status
+                        Game.text.insert(END, str(Game.currentRoom) + "\nYou are carrying: " + str(Game.inventory) + "\n\n" + status)
+                        if ((boss_hp == (90 or 150)) and (Game.currentRoom == (r1 or r4))):
+                              Game.text.insert(END, "There is a boss in this room and its health is 90.\n")
+
+                        # Directions to move forward if boss is dead
+                        elif (boss_hp <= 0 and Game.currentRoom == (r1 or r4)):
+                              Game.text.insert(END, "The boss now has 0 HP.\n")
+                              Game.text.insert(END, "You may proceed to the next room.\n")
+                              
+                        # Default directions
+                        else:
+                              Game.text.insert(END, "Look around. There might be clues.")
+                # Don't let user type in the right text box
+                Game.text.config(state=DISABLED)
+
+
+        # play the main game
+        def play(self):
+                # add the rooms to the game
+                self.createRooms()
+                # configure the GUI
+                self.setupGUI()
+                # set the current room
+                self.setRoomImage()
+                # set the current status
+                self.setStatus("")
+
+
+                #puts music on, the '-1' mean a loop.
+                mixer.init()
+                mixer.music.load('menu.ogg')
+                mixer.music.play(-1)
+
+        # processes the player's input
+        def process(self, event):
+
+                # grab the player's input from the input at the bottom of the GUI
+                action = Game.player_input.get()
+                # set the user's input to lowercase to make it easier to compare the verb and noun to known values
+                action = action.lower()
+                # set a default response
+                response = "I don't understand. Try verb noun. Valid verbs are go, look, and take"
+
+                # exit the game if the player wants to leave (supports quit, exit, and bye)
+                if (action == "quit" or action == "exit" or action == "bye" or action == "sionara!"):
+                        exit(0)
+
+                # if the player is dead... 
+                if (Game.currentRoom == None):
+                        # clear the player's input
+                        Game.player_input.delete(0, END)
+                        return
+
+                # split the user input into words (words are separated by spaces) and store the words in a list
+                words = action.split()
+
+                # the game only understands two word inputs
+                if (len(words) == 2):
+                        # isolate the verb and noun
+                        verb = words[0]
+                        noun = words[1]
+
+                        # the verb is: go
+                        if (verb == "go"):
+                                # set a default response
+                                response = "Invalid exit."
+
+                                # check for valid exits in the current room
+                                if (noun in Game.currentRoom.exits):
+                                        # if one is found, change the current room to
+                                        # the one that is associated with the
+                                        # specified exit
+                                        Game.currentRoom = Game.currentRoom.exits[noun]
+
+                                        # set the response (success)
+                                        response = "Room changed."
+
+                        # the verb is: look
+                        elif (verb == "look"):
+                                # set a default response
+                                response = "I don't see that item."
+
+                                # check for valid items in the current room
+                                if (noun in Game.currentRoom.items):
+                                        # if one is found, set the response to the
+                                        # item's description
+                                        response = Game.currentRoom.items[noun]
+
+                        elif (verb == "attack"):
+                                # set a default response
+                                response = "There is nothing to attack."
+
+                                # check for valid targets in the current room
+                                if (noun in Game.currentRoom.bosses):
+                                        # if one is found, set the response to the
+                                        # item's description
+                                        damage = 0
+                                        #use randint here.
+                                        response = "You did {} damage to the boss!".format(str(damage))
+
+                        elif (verb == "select"):
+                              #set default response
+                              response = "You cannot select a character at this time."
+
+                              for character in Game.currentRoom.Characters:
+                                    # a valid character is found
+                                    if (noun == character):
+                                          if (character == "girl"):
+                                                Game.youare.append("girl")
+                                                Game.currentRoom.delChar("boy")
+                                                Game.currentRoom.delChar("potato")
+                                                response = "You are a girl."
+                                          elif (character == "boy"):
+                                                Game.youare.append("boy")
+                                                Game.currentRoom.delChar("girl")
+                                                Game.currentRoom.delChar("potato")
+                                                response = "You are a boy."
+                                          elif (character == "potato"):
+                                                Game.youare.append("potato")
+                                                Game.currentRoom.delChar("boy")
+                                                Game.currentRoom.delChar("girl")
+                                                response = "You are a potato."
+
+                        # the verb is: take
+                        elif (verb == "take"):
+                              # set a default response
+                              response = "I don't see that item."
+
+                              # check for valid grabbable items in the current room
+                              for grabbable in Game.currentRoom.grabbables:
+                                    # a valid grabbable item is found
+                                    if (noun == grabbable):
+                                          # add the grabbable item to the player's inventory
+                                          Game.inventory.append(grabbable)
+                                          # remove the grabbable item from the room
+                                          Game.currentRoom.delGrabbable(grabbable)
+                                          # set the response (success)
+                                          response = "Item grabbed."
+                                          # no need to check any more grabbable items
+                                          break
+                                    
+                # display the response on the right of the GUI, display the room's image on the left of the GUI, clear the player's input
+                self.setStatus(response)
+                self.setRoomImage()
+                Game.player_input.delete(0, END)
+                self.setRoomSound()
+
+
+
+
+
+
+
+##########################################################
+# the default size of the GUI is 800x600
+WIDTH = 800
+HEIGHT = 600
+# create the window
+window = Tk()
+window.title("Room Adventure")
+# create the GUI as a Tkinter canvas inside the window
+g = Game(window)
+# play the game
+g.play()
+# wait for the window to close
+window.mainloop()
